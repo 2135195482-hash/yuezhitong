@@ -5,22 +5,24 @@ export default function SourcesPage() {
     <main className="mx-auto max-w-4xl px-4 py-6">
       <h1 className="text-2xl font-bold">数据与核对说明</h1>
       <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">
-        当前公测版暂不提供全量官方招生数据库，也不使用演示数据进行真实推荐。系统分析的对象，是用户自行录入的候选院校专业组方案。
+        当前静态测试版内置广东省教育考试院公开发布的2023-2025年普通类本科批院校专业组历史投档数据，同时保留用户自行录入候选方案的复核流程。
       </p>
 
       <section className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
-        <h2 className="text-base font-semibold">用户需要自行核实的官方渠道</h2>
+        <h2 className="text-base font-semibold">内置历史数据来源</h2>
         <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-muted)]">
-          <li>《广东省2026年普通高等学校招生专业目录》。</li>
-          <li>广东省教育考试院志愿填报系统及普通高考志愿填报辅助系统。</li>
-          <li>目标高校2026年招生章程、招生专业目录和收费说明。</li>
-          <li>高校官方招生网发布的专业录取规则、校区、体检限制、单科要求等信息。</li>
+          <li>2023年本科批次投档情况：广东省教育考试院公告及附件。</li>
+          <li>2024年本科批次投档情况：广东省教育考试院公告及附件。</li>
+          <li>2025年本科普通类（历史、物理）投档情况：广东省教育考试院公告及附件。</li>
+          <li>只发布普通类本科批历史类与物理类；艺术类、体育类、提前批、专科批等不进入本静态数据集。</li>
         </ul>
       </section>
 
       <section className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
         <h2 className="text-base font-semibold">系统会做什么</h2>
         <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-muted)]">
+          <li>按年份、科类、院校名称或代码查询历史院校专业组投档数据。</li>
+          <li>在可靠匹配时展示同一院校专业组跨年趋势；不只凭专业组代码强行连接。</li>
           <li>整理用户录入的院校专业组候选项。</li>
           <li>根据用户录入的2023、2024、2025最低排位做冲稳保分层。</li>
           <li>提示费用、民办/中外合作、调剂、专业排斥、选科匹配和数据缺失风险。</li>
@@ -31,6 +33,8 @@ export default function SourcesPage() {
       <section className="mt-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
         <h2 className="text-base font-semibold">系统不会做什么</h2>
         <ul className="mt-3 space-y-2 text-sm text-[var(--color-text-muted)]">
+          <li>不会把历史投档数据描述为具体专业录取数据。</li>
+          <li>不会把2023-2025历史数据冒充为2026招生计划。</li>
           <li>不会读取或展示231条演示数据作为真实推荐。</li>
           <li>不会自动生成院校代码、专业组代码、招生计划、最低分或最低排位。</li>
           <li>不会登录广东志愿填报系统，也不会自动提交志愿。</li>

@@ -16,9 +16,6 @@ export default function ResultsPage() {
   const [checklist, setChecklist] = useState({})
   const [order, setOrder] = useState([])
   const [dragIndex, setDragIndex] = useState(null)
-  const [aiText, setAiText] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiUnavailable, setAiUnavailable] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY)
@@ -62,35 +59,6 @@ export default function ResultsPage() {
   const adjustmentItems = analysis.items.filter((item) => item.warnings.some((warning) => warning.includes('调剂')))
   const majorRiskItems = analysis.items.filter((item) => item.warnings.some((warning) => warning.includes('排斥专业') || warning.includes('专业')))
   const missingDataItems = analysis.items.filter((item) => item.rankStats.years.length < 2 || item.errors.length)
-
-  const requestAi = async () => {
-    setAiLoading(true)
-    setAiUnavailable(false)
-    try {
-      const res = await fetch('/api/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: 'plan-review',
-          profile: compressProfile(profile),
-          candidates: analysis.items.slice(0, 20).map(compressItem),
-          localAnalysis: {
-            distribution: analysis.distribution,
-            globalWarnings: analysis.globalWarnings,
-            checklistIncomplete: analysis.checklist.filter((_, index) => !checklist[index]),
-          },
-        }),
-      })
-      const data = await res.json()
-      setAiText(data.report || 'AI解释暂不可用，本地规则分析仍可使用。')
-      setAiUnavailable(Boolean(data.aiUnavailable))
-    } catch {
-      setAiText('AI解释暂不可用，本地规则分析仍可使用。')
-      setAiUnavailable(true)
-    } finally {
-      setAiLoading(false)
-    }
-  }
 
   const moveOrder = (from, to) => {
     if (to < 0 || to >= order.length) return
@@ -241,15 +209,10 @@ export default function ResultsPage() {
       <section className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold">AI通俗解释</h2>
-          <button onClick={requestAi} disabled={aiLoading} className="rounded bg-[var(--color-primary)] px-4 py-2 text-sm text-white disabled:opacity-50">{aiLoading ? '生成中...' : '生成解释与核对提示'}</button>
         </div>
-        <p className="mt-2 text-xs text-[var(--color-text-muted)]">AI只解释本地规则结果和专业方向，不创建代码、计划、分数或排位。AI失败时，本页本地规则结果仍完整可用。</p>
-        {aiText && (
-          <div className="mt-3 whitespace-pre-wrap rounded border border-blue-100 bg-blue-50 p-3 text-sm leading-relaxed">
-            {aiUnavailable && <p className="mb-2 text-xs text-orange-700">AI服务不可用，以下为降级提示。</p>}
-            {aiText}
-          </div>
-        )}
+        <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-muted)]">
+          当前静态版使用本地规则分析，AI深度解释暂未开放。页面不会调用 DeepSeek、Vercel API 或任何服务端接口。
+        </p>
       </section>
 
       <section className="mb-8 rounded-lg border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 p-4 text-xs leading-relaxed text-[var(--color-text-muted)]">
@@ -296,41 +259,6 @@ function RiskPanel({ title, items, empty }) {
       )}
     </div>
   )
-}
-
-function compressProfile(profile) {
-  return {
-    category: profile.category,
-    subjects: profile.subjects,
-    score: profile.score,
-    rank: profile.rank,
-    maxTuition: profile.maxTuition,
-    preferredCities: profile.preferredCities,
-    acceptPrivate: profile.acceptPrivate,
-    acceptSinoForeign: profile.acceptSinoForeign,
-    acceptAdjustment: profile.acceptAdjustment,
-    interests: profile.interests,
-    rejectedMajors: profile.rejectedMajors,
-    priority: profile.priority,
-  }
-}
-
-function compressItem(item) {
-  return {
-    tier: item.tier,
-    institutionName: item.institutionName,
-    institutionCode: item.institutionCode,
-    groupCode: item.groupCode,
-    majors: item.majors,
-    city: item.city,
-    schoolType: item.schoolType,
-    tuition: item.tuition,
-    ranks: { 2023: item.rank2023, 2024: item.rank2024, 2025: item.rank2025 },
-    plan2026: item.plan2026,
-    reason: item.reason,
-    warnings: item.warnings,
-    errors: item.errors,
-  }
 }
 
 function downloadFile(filename, content, type) {

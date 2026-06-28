@@ -2,6 +2,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   PUBLIC_DISCLAIMER,
@@ -121,6 +122,36 @@ export default function QuestionnairePage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ profile, candidates, analysis }))
     router.push('/results')
   }
+  const exportBackup = () => {
+    const backup = JSON.stringify({ profile, candidates, exportedAt: new Date().toISOString() }, null, 2)
+    const blob = new Blob([backup], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'yuezhitong-local-backup.json'
+    link.click()
+    URL.revokeObjectURL(url)
+  }
+  const clearLocalPlan = () => {
+    if (!window.confirm('确认清空本机浏览器中保存的考生信息和候选方案？清空后不可恢复，建议先导出备份。')) return
+    localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(`${STORAGE_KEY}-checklist`)
+    setProfile({
+      category: '物理类',
+      selectedSubjects: ['物理', '化学'],
+      score: '',
+      rank: '',
+      maxTuition: '20000',
+      preferredCitiesText: '',
+      acceptPrivate: false,
+      acceptSinoForeign: false,
+      acceptAdjustment: true,
+      majorInterestsText: '',
+      excludedMajorsText: '',
+      priority: '专业',
+    })
+    setCandidates([emptyCandidate()])
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6">
@@ -130,6 +161,11 @@ export default function QuestionnairePage() {
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-[var(--color-text-muted)]">
           请先通过广东省官方辅助系统、招生专业目录和高校招生章程筛选候选院校专业组，再把方案录入这里。本工具只做梯度、费用、调剂、专业方向和核对清单分析。
         </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Link href="/official" className="rounded border border-[var(--color-primary)] px-3 py-2 text-sm text-[var(--color-primary)] no-underline">查询官方历史数据</Link>
+          <button type="button" onClick={exportBackup} className="rounded border border-[var(--color-border)] px-3 py-2 text-sm">导出本地备份</button>
+          <button type="button" onClick={clearLocalPlan} className="rounded border border-red-200 px-3 py-2 text-sm text-red-600">清空本地方案</button>
+        </div>
       </div>
 
       <section className="mb-5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
