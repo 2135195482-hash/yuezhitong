@@ -1,11 +1,14 @@
 node_modules/
 .next/
+out/
 *.db
 *.db.backup
 *.db-journal
 *.db.journal
 *.tsbuildinfo
 .env
+.env.local
+.env.*.local
 __pycache__/
 *.pyc
 .git.broken-backup-*/
@@ -15,5 +18,7 @@ data/normalized/
 data/verified/
 data/rejected/
 data/review/
+data/official/raw/
+data/official/work/
 
 .vercel
