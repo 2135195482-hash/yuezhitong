@@ -1,0 +1,16 @@
+{
+  "validatedAt": "2026-06-26T14:17:23.723479",
+  "summary": {
+    "totalRecords": 231,
+    "valid": 231,
+    "review": 0,
+    "rejected": 0,
+    "yearConflicts": 0,
+    "categoryConflicts": 0,
+    "scoreAnomalies": 0,
+    "rankAnomalies": 0,
+    "institutionConflicts": 0,
+    "sourceIssues": 0
+  },
+  "details": []
+}

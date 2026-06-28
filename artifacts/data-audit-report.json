@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-06-27",
+  "project": "粤志通",
+  "conclusion": "ALL_RECORDS_ARE_DEMO_DATA",
+  "summary": {
+    "totalRecords": 231,
+    "realOfficialRecords": 0,
+    "demoRecords": 231,
+    "unknownSourceRecords": 0,
+    "physicsRecords": 153,
+    "historyRecords": 78,
+    "recordsWithScore": 231,
+    "recordsWithRank": 231,
+    "recordsWithRealSourceUrl": 0,
+    "dualVerified": 0,
+    "singleSource": 231,
+    "conflict": 0,
+    "rejected": 0,
+    "uniqueInstitutions": 28,
+    "uniqueGroups": 77
+  },
+  "byYear": {
+    "2023": {"physics": 51, "history": 26},
+    "2024": {"physics": 51, "history": 26},
+    "2025": {"physics": 51, "history": 26}
+  },
+  "samplesChecked": 18,
+  "samplesAllDemo": true,
+  "issuesFound": [
+    "sourceUrl_is_placeholder",
+    "scores_derived_from_rank_not_official",
+    "ranks_are_approximate_estimates",
+    "plan_counts_are_random",
+    "group_codes_manually_constructed",
+    "published_dates_are_placeholder",
+    "2025_data_published_before_actual_admission",
+    "group_codes_reused_across_years_without_verification",
+    "no_dual_verification_performed"
+  ]
+}

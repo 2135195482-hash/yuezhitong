@@ -1,0 +1,464 @@
+{
+  "generatedAt": "2026-06-26T14:16:09.578257",
+  "province": "广东",
+  "sources": {
+    "广东省教育考试院": {
+      "url": "https://eea.gd.gov.cn/",
+      "level": "A",
+      "categories": [
+        "投档情况",
+        "分数段统计",
+        "招生专业目录",
+        "录取最低控制分数线"
+      ]
+    },
+    "广东省教育厅": {
+      "url": "https://edu.gd.gov.cn/",
+      "level": "A"
+    },
+    "教育部阳光高考平台": {
+      "url": "https://gaokao.chsi.com.cn/",
+      "level": "A"
+    },
+    "教育部": {
+      "url": "https://www.moe.gov.cn/",
+      "level": "A",
+      "resources": [
+        "普通高等学校名单",
+        "本科专业目录"
+      ]
+    }
+  },
+  "institutions": [
+    {
+      "code": "10558",
+      "name": "中山大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": true,
+      "is211": true,
+      "isDoubleFirst": true
+    },
+    {
+      "code": "10561",
+      "name": "华南理工大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": true,
+      "is211": true,
+      "isDoubleFirst": true
+    },
+    {
+      "code": "10559",
+      "name": "暨南大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": true,
+      "isDoubleFirst": true
+    },
+    {
+      "code": "10564",
+      "name": "华南农业大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": true
+    },
+    {
+      "code": "10572",
+      "name": "广州中医药大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": true
+    },
+    {
+      "code": "10574",
+      "name": "华南师范大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": true,
+      "isDoubleFirst": true
+    },
+    {
+      "code": "10560",
+      "name": "汕头大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "汕头",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "11845",
+      "name": "广东工业大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "11078",
+      "name": "广州大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "11846",
+      "name": "广东外语外贸大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10566",
+      "name": "广东海洋大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "湛江",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "11847",
+      "name": "佛山大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "佛山",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10592",
+      "name": "广东财经大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10571",
+      "name": "广东医科大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "湛江",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10588",
+      "name": "广东技术师范大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "11349",
+      "name": "五邑大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "江门",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10579",
+      "name": "岭南师范学院",
+      "type": "公办",
+      "province": "广东",
+      "city": "湛江",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10578",
+      "name": "韩山师范学院",
+      "type": "公办",
+      "province": "广东",
+      "city": "潮州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "11656",
+      "name": "广东石油化工学院",
+      "type": "公办",
+      "province": "广东",
+      "city": "茂名",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10576",
+      "name": "韶关学院",
+      "type": "公办",
+      "province": "广东",
+      "city": "韶关",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10582",
+      "name": "嘉应学院",
+      "type": "公办",
+      "province": "广东",
+      "city": "梅州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10580",
+      "name": "肇庆学院",
+      "type": "公办",
+      "province": "广东",
+      "city": "肇庆",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10577",
+      "name": "惠州学院",
+      "type": "公办",
+      "province": "广东",
+      "city": "惠州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "11540",
+      "name": "广东金融学院",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "14278",
+      "name": "广东第二师范学院",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "16401",
+      "name": "北京理工大学珠海学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "珠海",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "12617",
+      "name": "广州城市理工学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "12618",
+      "name": "广州软件学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "12619",
+      "name": "广州南方学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "12620",
+      "name": "广东外语外贸大学南国商学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "12621",
+      "name": "广州华商学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "12622",
+      "name": "湛江科技学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "湛江",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "12623",
+      "name": "华南农业大学珠江学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "13667",
+      "name": "广州商学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "13684",
+      "name": "珠海科技学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "珠海",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "13714",
+      "name": "广州工商学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "13719",
+      "name": "广东科技学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "东莞",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "13720",
+      "name": "广东理工学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "肇庆",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "13844",
+      "name": "东莞城市学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "东莞",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "13902",
+      "name": "广州新华学院",
+      "type": "民办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "14362",
+      "name": "深圳技术大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "深圳",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10590",
+      "name": "深圳大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "深圳",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": false
+    },
+    {
+      "code": "10570",
+      "name": "广州医科大学",
+      "type": "公办",
+      "province": "广东",
+      "city": "广州",
+      "is985": false,
+      "is211": false,
+      "isDoubleFirst": true
+    }
+  ]
+}

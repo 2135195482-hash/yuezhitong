@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Institution {
+  id              Int      @id @default(autoincrement())
+  code            String   @unique
+  name            String
+  type            String
+  level           String   @default("本科")
+  province        String
+  city            String   @default("")
+  is985           Boolean  @default(false)
+  is211           Boolean  @default(false)
+  isDoubleFirst   Boolean  @default(false)
+  verifiedAt      String?
+  notes           String   @default("")
+  createdAt       DateTime @default(now())
+  
+  admissionRecords AdmissionRecord[]
+}
+
+model AdmissionRecord {
+  id                    Int      @id @default(autoincrement())
+  province              String
+  admissionYear         Int
+  category              String
+  batch                 String
+  
+  institution           Institution?        @relation(fields: [institutionId], references: [id])
+  institutionId         Int?
+  institutionCode       String
+  institutionName       String
+  
+  groupCode             String
+  groupName             String    @default("")
+  
+  majorCode             String    @default("")
+  majorName             String    @default("")
+  
+  subjectRequirements   String    @default("")
+  planCount             Int?
+  minimumScore          Int?
+  minimumRank           Int?
+  
+  dataType              String
+  sourceLevel           String
+  sourceName            String
+  sourceUrl             String    @default("")
+  officialTitle         String    @default("")
+  officialPublishedAt   String
+  fetchedAt             String
+  sourceFileHash        String    @default("")
+  
+  isDemo                Boolean   @default(false)
+  confidence            String    @default("verified")
+  verificationStatus    String    @default("single-source")
+  notes                 String    @default("")
+  
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@index([admissionYear, category, batch])
+  @@index([admissionYear, category, institutionCode])
+  @@index([admissionYear, category, institutionCode, groupCode])
+  @@index([verificationStatus])
+}
+
+model ScoreRankTable {
+  id              Int      @id @default(autoincrement())
+  province        String
+  admissionYear   Int
+  category        String
+  score           Int
+  rank            Int
+  cumulativeCount Int?
+  sourceUrl       String    @default("")
+  sourceName      String    @default("")
+  officialTitle   String    @default("")
+  officialPublishedAt String  @default("")
+  fetchedAt       String    @default("")
+  
+  createdAt       DateTime  @default(now())
+  
+  @@unique([admissionYear, category, score])
+  @@index([admissionYear, category])
+}
+
+model AdmissionPolicy {
+  id              Int      @id @default(autoincrement())
+  institutionId   Int?
+  institutionName String
+  admissionYear   Int
+  policyUrl       String    @default("")
+  policyText      String    @default("")
+  notes           String    @default("")
+  fetchedAt       String    @default("")
+  createdAt       DateTime  @default(now())
+}
+
+model DataConflict {
+  id              Int      @id @default(autoincrement())
+  recordIdA       Int?
+  recordIdB       Int?
+  field           String
+  valueA          String    @default("")
+  valueB          String    @default("")
+  sourceA         String    @default("")
+  sourceB         String    @default("")
+  resolved        Boolean   @default(false)
+  resolution      String    @default("")
+  createdAt       DateTime  @default(now())
+  
+  @@index([resolved])
+}
+
+model YearConflict {
+  id              Int      @id @default(autoincrement())
+  recordId        Int?
+  claimedYear     Int
+  sourceYearField String    @default("")
+  bodyYearField   Int?
+  fileNameYear    Int?
+  urlYearHint     Int?
+  conflictFields  String    @default("")
+  reviewed        Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+}

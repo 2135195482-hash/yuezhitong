@@ -1,0 +1,16 @@
+node_modules/
+.next/
+*.db
+*.db.backup
+*.db-journal
+*.db.journal
+.env
+__pycache__/
+*.pyc
+.git.broken-backup-*/
+logs/
+data/raw/
+data/normalized/
+data/verified/
+data/rejected/
+data/review/
