@@ -1,0 +1,27 @@
+{
+  "recordFields": [
+    "province",
+    "admissionYear",
+    "category",
+    "batch",
+    "institutionCode",
+    "institutionName",
+    "groupCode",
+    "planCount",
+    "submittedCount",
+    "minimumScore",
+    "minimumRank",
+    "statusNote",
+    "dataGranularity",
+    "isMajorAdmissionScore",
+    "isDemo",
+    "sourceOrganization",
+    "sourcePageUrl",
+    "sourceAttachmentName",
+    "sourcePdfName",
+    "sourceFileHash",
+    "officialPublishedAt",
+    "verificationStatus"
+  ],
+  "note": "字段为广东省教育考试院历史院校专业组投档数据的规范化表达；不是具体专业录取数据，不包含2026招生计划。"
+}

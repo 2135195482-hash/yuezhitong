@@ -1,94 +1,92 @@
-{
-  "created": "2026-06-27T10:30:00",
-  "updated": "2026-06-27T14:00:00",
-  "updateNote": "修正为4个原始文件结构: 2023/2024各一个ZIP(含物理+历史), 2025两个独立PDF",
-  "description": "广东省教育考试院官方投档数据来源清单",
-  "totalFilesToDownload": 4,
-  "sources": [
-    {
-      "admissionYear": 2025,
-      "type": "pdfs",
-      "categoryPageUrls": {
-        "物理类": "https://eea.gd.gov.cn/zwgk/sjfb/tjsj/content/post_4746786.html",
-        "历史类": "https://eea.gd.gov.cn/ptgk/content/post_4746781.html"
-      },
-      "officialPageTitle": "我省2025年普通高考本科批次正式投档",
-      "attachments": {
-        "物理类": {
-          "url": "https://eea.gd.gov.cn/attachment/0/585/585886/4746786.pdf",
-          "name": "4746786.pdf",
-          "format": "PDF",
-          "saveTo": "data/official/raw/2025/physics/4746786.pdf",
-          "status": "confirmed"
-        },
-        "历史类": {
-          "url": "https://eea.gd.gov.cn/attachment/0/585/585885/4746781.pdf",
-          "name": "4746781.pdf",
-          "format": "PDF",
-          "saveTo": "data/official/raw/2025/history/4746781.pdf",
-          "status": "confirmed"
-        }
-      },
-      "officialPublishedAt": "2025-07-19",
-      "categoryDetection": "PDF内容标题文字",
-      "parser": "scripts/importers/guangdong-2025.py"
-    },
-    {
-      "admissionYear": 2024,
-      "type": "zip",
-      "categoryPageUrls": {
-        "all": "https://eea.gd.gov.cn/gkmlpt/content/4/4458/mpost_4458330.html"
-      },
-      "officialPageTitle": "我省2024年普通高考本科批次正式投档",
-      "attachments": {
-        "all": {
-          "url": "https://eea.gd.gov.cn/attachment/0/554/554636/4458330.zip",
-          "name": "4458330.zip",
-          "format": "ZIP",
-          "saveTo": "data/official/raw/2024/archive/4458330.zip",
-          "status": "confirmed",
-          "contents": "ZIP包含物理类和历史类各一个PDF，解析器根据PDF内部标题文字识别科类",
-          "keepOriginal": true,
-          "keepNote": "原始ZIP永久保留在archive目录，不解压、不删除、不移走"
-        }
-      },
-      "officialPublishedAt": "2024-07-19",
-      "categoryDetection": "PDF内部标题文字（非文件名排列顺序）",
-      "parser": "scripts/importers/guangdong-2024.py"
-    },
-    {
-      "admissionYear": 2023,
-      "type": "zip",
-      "categoryPageUrls": {
-        "all": "https://eea.gd.gov.cn/ptgk/content/post_4221648.html"
-      },
-      "officialPageTitle": "我省2023年普通高考本科批次正式投档",
-      "attachments": {
-        "all": {
-          "url": "https://eea.gd.gov.cn/attachment/0/526/526559/4221648.zip",
-          "name": "4221648.zip",
-          "format": "ZIP",
-          "saveTo": "data/official/raw/2023/archive/4221648.zip",
-          "status": "confirmed",
-          "contents": "ZIP包含物理类和历史类各一个PDF，解析器根据PDF内部标题文字识别科类",
-          "keepOriginal": true,
-          "keepNote": "原始ZIP永久保留在archive目录，不解压、不删除、不移走"
-        }
-      },
-      "officialPublishedAt": "2023-07-19",
-      "categoryDetection": "PDF内部标题文字（非文件名排列顺序）",
-      "parser": "scripts/importers/guangdong-2023.py"
-    }
-  ],
-  "categoryDetectionMethod": "PDF文档内部标题关键词匹配（'本科普通类（物理）投档情况' / '本科普通类（历史）投档情况'）。检查PDF前2页文本，含'物理类'且不含'历史类'→物理类，含'历史类'且不含'物理类'→历史类，两者均有按首次出现判定。文件名仅作为后备提示，不替代PDF内容判定。",
-  "accessNote": "广东省教育考试院 (eea.gd.gov.cn) 服务器仅接受中国大陆 IP 连接。非中国大陆环境返回 ERR_CONNECTION_CLOSED。请在本地浏览器下载。",
-  "parsers": {
-    "2023": "scripts/importers/guangdong-2023.py",
-    "2024": "scripts/importers/guangdong-2024.py",
-    "2025": "scripts/importers/guangdong-2025.py"
+[
+  {
+    "admissionYear": 2023,
+    "category": "archive",
+    "sourceOrganization": "广东省教育考试院",
+    "sourcePageTitle": "本科批次投档情况",
+    "sourcePageUrl": "https://eea.gd.gov.cn/ptgk/content/post_4221648.html",
+    "sourceAttachmentUrl": "https://eea.gd.gov.cn/attachment/0/526/526559/4221648.zip",
+    "sourceAttachmentName": "广东省2023年本科批次投档情况.zip",
+    "officialPublishedAt": "",
+    "localPath": "data/official/raw/2023/archive/广东省2023年本科批次投档情况.zip",
+    "fileSize": 2641851,
+    "mimeType": "application/zip",
+    "sha256": "807e0a7ff79822ccf881913e6943cc187d5c952d8cd3c444e77db2730fc253aa",
+    "downloadedAt": "2026-06-28T09:03:22.318443+00:00",
+    "validationStatus": "verified",
+    "validationNote": "zip verified",
+    "zipEntries": [
+      "广东省2023年本科播音与主持类统考投档情况.pdf",
+      "广东省2023年本科广播电视编导类统考投档情况.pdf",
+      "广东省2023年本科美术类统考投档情况.pdf",
+      "广东省2023年本科普通类（历史）投档情况.pdf",
+      "广东省2023年本科普通类（物理）投档情况.pdf",
+      "广东省2023年本科书法类统考投档情况.pdf",
+      "广东省2023年本科体育类投档情况.pdf",
+      "广东省2023年本科舞蹈类统考投档情况.pdf",
+      "广东省2023年本科音乐类统考投档情况.pdf"
+    ]
   },
-  "importer": "scripts/importers/import-official.py",
-  "validator": "scripts/validate-official.py",
-  "dataGate": "scripts/data-gate.sh",
-  "auditor": "scripts/audit-official-data.py"
-}
+  {
+    "admissionYear": 2024,
+    "category": "archive",
+    "sourceOrganization": "广东省教育考试院",
+    "sourcePageTitle": "本科批次投档情况",
+    "sourcePageUrl": "https://eea.gd.gov.cn/ptgk/content/post_4458330.html",
+    "sourceAttachmentUrl": "https://eea.gd.gov.cn/attachment/0/554/554636/4458330.zip",
+    "sourceAttachmentName": "广东省2024年本科投档情况.zip",
+    "officialPublishedAt": "",
+    "localPath": "data/official/raw/2024/archive/广东省2024年本科投档情况.zip",
+    "fileSize": 2753736,
+    "mimeType": "application/zip",
+    "sha256": "bff3dcdc9c101c24f02c94000ae340b3c6943ee1d411baf5a692831ab3cf5d49",
+    "downloadedAt": "2026-06-28T09:03:22.338713+00:00",
+    "validationStatus": "verified",
+    "validationNote": "zip verified",
+    "zipEntries": [
+      "广东省2024年本科书法类统考投档情况.pdf",
+      "广东省2024年本科体育类投档情况.pdf",
+      "广东省2024年本科播音与主持类统考投档情况.pdf",
+      "广东省2024年本科普通类（历史）投档情况.pdf",
+      "广东省2024年本科普通类（物理）投档情况.pdf",
+      "广东省2024年本科美术与设计类统考投档情况.pdf",
+      "广东省2024年本科舞蹈类统考投档情况.pdf",
+      "广东省2024年本科表(导)演类统考投档情况.pdf",
+      "广东省2024年本科音乐类统考投档情况.pdf"
+    ]
+  },
+  {
+    "admissionYear": 2025,
+    "category": "历史类",
+    "sourceOrganization": "广东省教育考试院",
+    "sourcePageTitle": "广东省2025年普通高考本科批次正式投档",
+    "sourcePageUrl": "https://eea.gd.gov.cn/ptgk/content/post_4746781.html",
+    "sourceAttachmentUrl": "https://eea.gd.gov.cn/attachment/0/585/585885/4746781.pdf",
+    "sourceAttachmentName": "广东省2025年本科普通类（历史）投档情况.pdf",
+    "officialPublishedAt": "",
+    "localPath": "data/official/raw/2025/history/广东省2025年本科普通类（历史）投档情况.pdf",
+    "fileSize": 431545,
+    "mimeType": "application/pdf",
+    "sha256": "ab814f4a274132f23919471419a3bb1cdcf89b257177b7a640f2865af55f18df",
+    "downloadedAt": "2026-06-28T09:03:22.365578+00:00",
+    "validationStatus": "verified",
+    "validationNote": "pdf verified:35 pages"
+  },
+  {
+    "admissionYear": 2025,
+    "category": "物理类",
+    "sourceOrganization": "广东省教育考试院",
+    "sourcePageTitle": "广东省2025年普通高考本科批次正式投档",
+    "sourcePageUrl": "https://eea.gd.gov.cn/ptgk/content/post_4746781.html",
+    "sourceAttachmentUrl": "https://eea.gd.gov.cn/attachment/0/585/585886/4746786.pdf",
+    "sourceAttachmentName": "广东省2025年本科普通类（物理）投档情况.pdf",
+    "officialPublishedAt": "",
+    "localPath": "data/official/raw/2025/physics/广东省2025年本科普通类（物理）投档情况.pdf",
+    "fileSize": 753301,
+    "mimeType": "application/pdf",
+    "sha256": "2852813a5723c67d97925dc8ad3a897b4b37c3bc50fd58dfae758625f3daa7f0",
+    "downloadedAt": "2026-06-28T09:03:22.377647+00:00",
+    "validationStatus": "verified",
+    "validationNote": "pdf verified:67 pages"
+  }
+]
