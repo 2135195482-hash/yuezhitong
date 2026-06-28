@@ -6,7 +6,9 @@
   "scripts": {
     "lint": "node scripts/lint-mvp.cjs",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/plan-review.test.cjs",
+    "test": "node scripts/plan-review.test.cjs && node scripts/official-data.test.cjs && node scripts/official-product.test.cjs",
+    "test:static": "node scripts/static-release.test.cjs",
+    "smoke:static": "node scripts/playwright-static-smoke.cjs",
     "build": "next build",
     "dev": "next dev"
   },
