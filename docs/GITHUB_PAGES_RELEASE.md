@@ -2,35 +2,45 @@
 
 Date: 2026-06-28
 
-## Status
+## Repository
 
-GitHub Pages workflow has been added at `.github/workflows/deploy-pages.yml`.
+- GitHub account: `2135195482-hash`
+- Repository: `https://github.com/2135195482-hash/yuezhitong`
+- Visibility: public
+- Default branch: `main`
+- Working release branch: `feature/official-static-data-release`
 
-Local blockers:
+## Pages
 
-- `gh` is not installed on this Windows machine.
-- The local repository has no GitHub remote configured.
-- The GitHub connector exposed in this session can operate on existing repositories, but it does not expose repository creation or whole-repository push.
+- Pages URL: `https://2135195482-hash.github.io/yuezhitong/`
+- Pages mode: GitHub Actions (`build_type=workflow`)
+- Initial successful workflow run: `28318268561`
+- Workflow: `.github/workflows/deploy-pages.yml`
 
-## Workflow
+The workflow runs `npm ci`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, `npm run test:static`, uploads `out/`, and deploys GitHub Pages.
 
-The workflow runs:
+## Online QA
 
-1. checkout
-2. setup Node 24
-3. `npm ci`
-4. `npm run lint`
-5. `npm run typecheck`
-6. `npm test`
-7. `npm run build`
-8. `npm run test:static`
-9. upload `out`
-10. deploy Pages
+Anonymous QA passed against the public Pages URL.
 
-## Expected URL
+- Home: 200
+- Official historical data page: 200
+- Candidate review page: 200
+- Results page direct route: 200
+- Sources page: 200
+- Disclaimer page: 200
+- Static official JSON files: all six year/category files loaded
+- Official search: passed with institution code `10590`
+- Add historical row to plan: passed
+- Manual candidate entry: passed
+- CSV/batch paste preview and error row: passed
+- Local rule analysis result page: passed
+- CSV, JSON, and text export: passed
+- Official checklist persistence after refresh: passed
+- 390px mobile overflow check: passed
+- 1440px desktop overflow check: passed
+- Forbidden requests to localhost, Vercel, DeepSeek, Prisma, demo DB, or `/api/`: none observed
 
-After pushing this repository as `yuezhitong` and enabling GitHub Pages through Actions, the expected URL is:
+Screenshots and export samples are saved locally under:
 
-`https://<github-user-or-org>.github.io/yuezhitong/`
-
-The exact address cannot be verified locally until the GitHub repository exists and the workflow completes.
+`artifacts/github-pages-final/`
