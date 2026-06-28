@@ -1,89 +1,54 @@
-// DeepSeek API integration using direct fetch (no OpenAI SDK dependency)
-// This avoids Turbopack ESM resolution issues with the openai package
-
-interface ReportInput {
-  profile: {
-    admissionYear: number
-    category: string
-    score: number
-    rank: number
-    selectedSubjects: string[]
-    preferredCities: string[]
-    majorInterests: string[]
-    excludedMajors: string[]
-    priority: string
-    careerGoals: string[]
-    acceptTransfer: boolean
-    acceptPrivate: boolean
-    acceptSinoForeign: boolean
-    maxTuition: number
-  }
-  recommendations: Array<{
-    tier: string
-    institutionName: string
-    institutionType: string
-    groupCode: string
-    groupName: string
-    majorDirection: string
-    minimumScore: number | null
-    minimumRank: number | null
-    planCount: number | null
-    rankHistory: Array<{ year: number; rank: number | null }>
-    reason: string
-    riskNotes: string[]
-    verificationStatus: string
-    is985: boolean
-    is211: boolean
-    isDoubleFirst: boolean
-    city: string
-  }>
-  question?: string
-  history?: Array<{ role: string; content: string }>
+interface PlanReviewAiInput {
+  profile: Record<string, unknown>
+  candidates: Array<Record<string, unknown>>
+  localAnalysis: Record<string, unknown>
 }
 
-export async function generateReport(input: ReportInput): Promise<string | null> {
+export async function generatePlanReviewExplanation(input: PlanReviewAiInput): Promise<string | null> {
   const apiKey = process.env.DEEPSEEK_API_KEY
   if (!apiKey || apiKey === 'sk-your-deepseek-api-key') return null
 
   const baseURL = process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com'
-  const topRecs = input.recommendations.slice(0, 10)
+  const candidates = (input.candidates || []).slice(0, 20)
 
-  const systemPrompt = `你是"粤志通"的AI助手，服务于广东高考考生志愿填报咨询。你的职责：
-1. 基于系统提供的录取数据，为用户生成个性化的志愿分析报告
-2. 解释专业方向、就业前景、考研考公路径
-3. 回答用户关于志愿填报策略的追问
+  const systemPrompt = `你是"粤志通 2026 志愿方案复核公测版"的AI解释助手。
+你只能解释本地规则分析结果，不能创建、猜测或修改院校代码、专业组代码、招生计划、最低分、最低排位、录取概率或官方政策。
+你不得声称已经读取广东官方系统，不得保证录取，不得替用户提交志愿。
+你需要提醒用户回到《广东省2026年普通高等学校招生专业目录》、广东省教育考试院志愿填报系统和高校2026年招生章程核实。
+输出使用简体中文，约800到1200中文字符，结构清晰，语气稳健。`
 
-重要约束：
-- 你只能基于系统提供的数据进行分析，不得编造录取分数、排位或招生计划
-- 不得猜测录取结果或给出"录取概率"
-- 不得承诺录取
-- 所有数据均已标注年份和来源，引用时必须保留标注
-- 如果数据不足，诚实说明而不是编造
-- 不得将不同年份数据混淆
-- 语气：专业、清晰、可信，面向考生和家长
-- 使用简体中文
-- 回答控制在500字以内`
+  const userPrompt = `考生信息：
+${JSON.stringify(input.profile, null, 2)}
 
-  const userPrompt = buildReportPrompt(input, topRecs)
+本地规则结果摘要：
+${JSON.stringify(input.localAnalysis, null, 2)}
 
-  const messages = [
-    { role: 'system', content: systemPrompt },
-    ...(input.history || []).map(m => ({ role: m.role, content: m.content })),
-    { role: 'user', content: userPrompt },
-  ]
+候选项摘要（最多20项）：
+${JSON.stringify(candidates, null, 2)}
+
+请输出：
+1. 总体梯度评价；
+2. 学校、专业、城市、成本的取舍提示；
+3. 调剂、民办/中外合作、数据缺失等风险；
+4. 考研、考公、就业方向的温和提醒；
+5. 最终核对清单重点。
+不得生成新的数字或代码。`
 
   try {
     const response = await fetch(`${baseURL}/v1/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'deepseek-chat',
-        messages,
-        max_tokens: 800,
-        temperature: 0.7,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        max_tokens: 1500,
+        temperature: 0.4,
       }),
     })
 
@@ -100,56 +65,11 @@ export async function generateReport(input: ReportInput): Promise<string | null>
   }
 }
 
-function buildReportPrompt(input: ReportInput, recs: ReportInput['recommendations']): string {
-  const { profile } = input
-
-  let p = `用户档案：
-- 目标年份：${profile.admissionYear}年
-- 科类：${profile.category}
-- 选科：${profile.selectedSubjects.join('、')}
-- 分数：${profile.score}分
-- 广东省排位：${profile.rank}
-- 偏好城市：${profile.preferredCities.join('、') || '无限制'}
-- 专业兴趣：${profile.majorInterests.join('、') || '未指定'}
-- 排斥专业：${profile.excludedMajors.join('、') || '无'}
-- 偏好：${profile.priority === 'school' ? '学校优先' : profile.priority === 'major' ? '专业优先' : '平衡考虑'}
-- 职业规划：${profile.careerGoals.join('、') || '未指定'}
-- 接受调剂：${profile.acceptTransfer ? '是' : '否'}
-- 接受民办：${profile.acceptPrivate ? '是' : '否'}
-- 接受中外合作：${profile.acceptSinoForeign ? '是' : '否'}
-- 最高学费：${profile.maxTuition}元/年
-
-系统筛选结果（基于广东${profile.admissionYear}年官方数据）：
-`
-
-  for (const r of recs) {
-    const tags = []
-    if (r.is985) tags.push('985')
-    if (r.is211) tags.push('211')
-    if (r.isDoubleFirst) tags.push('双一流')
-
-    p += `\n【${r.tier}】${r.institutionName} ${tags.join('/')} - 专业组${r.groupCode} ${r.groupName}
-  城市：${r.city}
-  院校类型：${r.institutionType}
-  近年最低排位：${r.rankHistory.map(h => `${h.year}年: ${h.rank || '无数据'}`).join(' | ')}
-  招生计划：${r.planCount || '无数据'}
-  验证状态：${r.verificationStatus}
-  推荐理由：${r.reason}
-  风险提示：${r.riskNotes.join('；')}
-`
-  }
-
-  if (input.question) {
-    p += `\n用户追问：${input.question}`
-  } else {
-    p += `\n请生成一份个性化分析报告，包括：
-1. 总体评估（基于用户的排位和偏好）
-2. 冲刺组分析要点
-3. 稳妥组分析要点
-4. 保底组分析要点
-5. 专业方向和就业建议
-6. 需要进一步核实的事项`
-  }
-
-  return p
+export function buildLocalFallbackExplanation(): string {
+  return [
+    'AI解释当前不可用，但本地规则复核结果仍然完整可用。',
+    '请优先查看冲稳保分布、每个候选项的风险提示、数据缺失项和官方核对清单。',
+    '凡是院校代码、专业组代码、选科要求、招生计划、收费标准、校区、体检限制、单科要求、调剂规则等信息，都必须回到《广东省2026年普通高等学校招生专业目录》、广东省教育考试院志愿填报系统及高校2026年招生章程核实。',
+    '本工具不会生成录取概率，也不保证录取；建议把结果当作二次检查清单和家庭讨论草稿使用。',
+  ].join('\n')
 }

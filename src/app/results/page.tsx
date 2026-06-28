@@ -1,270 +1,344 @@
+// @ts-nocheck
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import {
+  PUBLIC_DISCLAIMER,
+  analyzeVolunteerPlan,
+  serializeForCsv,
+} from '@/lib/plan-review'
 
-interface ResultData {
-  profile: Record<string, unknown>
-  tiers: Array<{
-    tier: string
-    count: number
-    items: Array<{
-      tier: string
-      record: {
-        institutionName: string
-        institutionCode: string
-        groupCode: string
-        groupName: string
-        majorName: string
-        subjectRequirements: string
-        planCount: number | null
-        minimumScore: number | null
-        minimumRank: number | null
-        sourceLevel: string
-        sourceName: string
-        sourceUrl: string
-        officialTitle: string
-        officialPublishedAt: string
-        verificationStatus: string
-        dataType: string
-      }
-      institution: {
-        type: string
-        is985: boolean
-        is211: boolean
-        isDoubleFirst: boolean
-        city: string
-        province: string
-      } | null
-      reason: string
-      riskNotes: string[]
-      rankHistory: Array<{ year: number; rank: number | null; score: number | null }>
-    }>
-  }>
-  totalResults: number
-  dataYear: number
-  availableHistoryYears: number[]
-}
+const STORAGE_KEY = 'yzt-plan-review-v1'
 
 export default function ResultsPage() {
-  const router = useRouter()
-  const [data, setData] = useState<ResultData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [aiReport, setAiReport] = useState<string | null>(null)
+  const [payload, setPayload] = useState(null)
+  const [checklist, setChecklist] = useState({})
+  const [order, setOrder] = useState([])
+  const [dragIndex, setDragIndex] = useState(null)
+  const [aiText, setAiText] = useState('')
   const [aiLoading, setAiLoading] = useState(false)
   const [aiUnavailable, setAiUnavailable] = useState(false)
-  const [activeTab, setActiveTab] = useState<string>('')
 
   useEffect(() => {
-    const stored = sessionStorage.getItem('recommendResults')
+    const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
       try {
         const parsed = JSON.parse(stored)
-        setData(parsed)
-        if (parsed.tiers.length > 0) setActiveTab(parsed.tiers[0].tier)
-      } catch { router.push('/') }
-    } else {
-      router.push('/')
+        setPayload(parsed)
+      } catch {}
     }
-    setLoading(false)
-  }, [router])
+    try {
+      setChecklist(JSON.parse(localStorage.getItem(`${STORAGE_KEY}-checklist`) || '{}'))
+    } catch {}
+  }, [])
+
+  const analysis = useMemo(() => {
+    if (!payload?.profile || !payload?.candidates) return null
+    const profile = toAnalysisProfile(payload.profile)
+    return analyzeVolunteerPlan(profile, payload.candidates)
+  }, [payload])
 
   useEffect(() => {
-    if (!data) return
-    const profile = sessionStorage.getItem('userProfile')
-    if (!profile) return
+    if (analysis?.suggestedOrder) setOrder(analysis.suggestedOrder)
+  }, [analysis])
 
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY}-checklist`, JSON.stringify(checklist))
+  }, [checklist])
+
+  if (!analysis) {
+    return (
+      <main className="mx-auto max-w-3xl px-4 py-12 text-center">
+        <h1 className="text-xl font-bold">暂无方案数据</h1>
+        <p className="mt-2 text-sm text-[var(--color-text-muted)]">请先录入考生信息和候选院校专业组。</p>
+        <Link href="/questionnaire" className="mt-5 inline-block rounded bg-[var(--color-primary)] px-5 py-2 text-sm text-white">开始录入</Link>
+      </main>
+    )
+  }
+
+  const profile = analysis.profile
+  const highCostItems = analysis.items.filter((item) => item.warnings.some((warning) => warning.includes('超过预算')))
+  const adjustmentItems = analysis.items.filter((item) => item.warnings.some((warning) => warning.includes('调剂')))
+  const majorRiskItems = analysis.items.filter((item) => item.warnings.some((warning) => warning.includes('排斥专业') || warning.includes('专业')))
+  const missingDataItems = analysis.items.filter((item) => item.rankStats.years.length < 2 || item.errors.length)
+
+  const requestAi = async () => {
     setAiLoading(true)
-    const allItems = data.tiers.flatMap(t => t.items.slice(0, 4))
-    fetch('/api/report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        profile: JSON.parse(profile),
-        recommendations: allItems.map(item => ({
-          tier: item.tier,
-          institutionName: item.record.institutionName,
-          institutionType: item.institution?.type || '公办',
-          groupCode: item.record.groupCode,
-          groupName: item.record.groupName,
-          majorDirection: item.record.majorName || '未指定',
-          minimumScore: item.record.minimumScore,
-          minimumRank: item.record.minimumRank,
-          planCount: item.record.planCount,
-          rankHistory: item.rankHistory,
-          reason: item.reason,
-          riskNotes: item.riskNotes,
-          verificationStatus: item.record.verificationStatus,
-          is985: item.institution?.is985 || false,
-          is211: item.institution?.is211 || false,
-          isDoubleFirst: item.institution?.isDoubleFirst || false,
-          city: item.institution?.city || '',
-        })),
-      }),
-    }).then(r => r.json()).then(d => {
-      setAiReport(d.report)
-      if (d.aiUnavailable) setAiUnavailable(true)
-    }).catch(() => {
-      setAiReport('AI报告生成遇到问题，基础推荐结果已就绪。')
+    setAiUnavailable(false)
+    try {
+      const res = await fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'plan-review',
+          profile: compressProfile(profile),
+          candidates: analysis.items.slice(0, 20).map(compressItem),
+          localAnalysis: {
+            distribution: analysis.distribution,
+            globalWarnings: analysis.globalWarnings,
+            checklistIncomplete: analysis.checklist.filter((_, index) => !checklist[index]),
+          },
+        }),
+      })
+      const data = await res.json()
+      setAiText(data.report || 'AI解释暂不可用，本地规则分析仍可使用。')
+      setAiUnavailable(Boolean(data.aiUnavailable))
+    } catch {
+      setAiText('AI解释暂不可用，本地规则分析仍可使用。')
       setAiUnavailable(true)
-    }).finally(() => setAiLoading(false))
-  }, [data])
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
-  if (loading) return <div className="max-w-4xl mx-auto px-4 py-12 text-center text-[var(--color-text-muted)]">加载中...</div>
-  if (!data) return null
+  const moveOrder = (from, to) => {
+    if (to < 0 || to >= order.length) return
+    setOrder((current) => {
+      const next = [...current]
+      const [item] = next.splice(from, 1)
+      next.splice(to, 0, item)
+      return next
+    })
+  }
 
-  const tierColors: Record<string, string> = {
-    '冲刺': 'border-l-red-500 bg-red-50',
-    '偏冲': 'border-l-orange-500 bg-orange-50',
-    '稳妥': 'border-l-green-500 bg-green-50',
-    '偏稳': 'border-l-blue-500 bg-blue-50',
-    '保底': 'border-l-indigo-500 bg-indigo-50',
-    '数据不足': 'border-l-gray-400 bg-gray-50',
+  const exportJson = () => downloadFile('yuezhitong-plan-review.json', JSON.stringify({ profile, analysis, order, checklist, disclaimer: PUBLIC_DISCLAIMER }, null, 2), 'application/json')
+  const exportCsv = () => downloadFile('yuezhitong-plan-review.csv', `\ufeff${serializeForCsv(order)}`, 'text/csv;charset=utf-8')
+  const exportText = () => {
+    const lines = [
+      '粤志通 2026 志愿方案复核公测版',
+      `考生：${profile.category}，${profile.score || '-'}分，排位${profile.rank || '-'}`,
+      '',
+      '建议研究顺序：',
+      ...order.map((item, index) => `${index + 1}. [${item.tier}] ${item.institutionName} ${item.groupCode} ${item.majors || ''} - ${item.reason}`),
+      '',
+      '必须核对：',
+      ...analysis.checklist.map((item, index) => `${checklist[index] ? '[x]' : '[ ]'} ${item}`),
+      '',
+      PUBLIC_DISCLAIMER,
+    ]
+    downloadFile('yuezhitong-plan-review.txt', lines.join('\n'), 'text/plain;charset=utf-8')
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      {/* Profile Summary */}
-      <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4 mb-4">
-        <h1 className="text-lg font-bold mb-2">分析结果</h1>
-        <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-[var(--color-text-muted)]">
-          <span>数据年份：<strong className="text-[var(--color-text)]">{data.dataYear}年</strong></span>
-          {data.availableHistoryYears.length > 0 && (
-            <span>历史参考：<strong className="text-[var(--color-text)]">{data.availableHistoryYears.join('、')}年</strong></span>
-          )}
-          <span>匹配结果：<strong className="text-[var(--color-text)]">{data.totalResults}个</strong>院校专业组</span>
+    <main className="mx-auto max-w-6xl px-4 py-6">
+      <section className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <p className="text-xs font-medium text-[var(--color-primary)]">粤志通 2026 志愿方案复核公测版</p>
+        <h1 className="mt-1 text-2xl font-bold">方案分析结果</h1>
+        <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+          <Summary label="科类/选科" value={`${profile.category} · ${(profile.subjects || []).join('、')}`} />
+          <Summary label="分数与排位" value={`${profile.score || '-'}分 · ${profile.rank || '-'}名`} />
+          <Summary label="候选数量" value={`${analysis.items.length} 个院校专业组`} />
+          <Summary label="预算" value={`${profile.maxTuition || '-'} 元/年`} />
         </div>
-      </div>
+      </section>
 
-      {/* AI Report */}
-      {aiLoading && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm text-[var(--color-text-muted)]">
-          正在生成个性化分析报告...
-        </div>
-      )}
-      {aiReport && (
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4 mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-semibold">AI个性化分析报告</h2>
-            {aiUnavailable && <span className="text-xs text-[var(--color-warning)]">AI服务暂时不可用，以下为基础报告</span>}
+      <section className="mb-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {Object.entries(analysis.distribution).map(([tier, count]) => (
+          <div key={tier} className={`rounded-lg border bg-white p-3 tier-${tier}`}>
+            <p className="text-xs text-[var(--color-text-muted)]">{tier}</p>
+            <p className="mt-1 text-2xl font-bold">{count}</p>
           </div>
-          <div className="text-sm whitespace-pre-wrap leading-relaxed text-[var(--color-text-muted)]">{aiReport}</div>
-          <div className="mt-3 text-xs text-[var(--color-text-muted)] border-t pt-2">
-            此报告基于系统筛选的录取数据生成，仅供参考。AI不编造分数、排位或招生计划。
+        ))}
+      </section>
+
+      {analysis.globalWarnings.length > 0 && (
+        <section className="mb-4 rounded-lg border border-orange-200 bg-orange-50 p-4">
+          <h2 className="text-sm font-semibold text-orange-900">梯度与完整性提醒</h2>
+          {analysis.globalWarnings.map((warning) => <p key={warning} className="mt-1 text-sm text-orange-800">{warning}</p>)}
+        </section>
+      )}
+
+      <section className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">每个候选院校专业组分析</h2>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={exportCsv} className="rounded border px-3 py-1.5 text-xs">导出CSV</button>
+            <button onClick={exportJson} className="rounded border px-3 py-1.5 text-xs">导出JSON</button>
+            <button onClick={exportText} className="rounded border px-3 py-1.5 text-xs">导出文本</button>
+            <button onClick={() => window.print()} className="rounded border px-3 py-1.5 text-xs">打印网页</button>
           </div>
         </div>
-      )}
-
-      {/* Tier Tabs */}
-      {data.tiers.length > 0 && (
-        <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-          {data.tiers.map(t => (
-            <button key={t.tier} onClick={() => setActiveTab(t.tier)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border ${activeTab === t.tier ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)]' : 'bg-white border-[var(--color-border)]'}`}>
-              {t.tier}（{t.count}）
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Results List */}
-      {data.tiers.filter(t => t.tier === activeTab).map(tier => (
-        <div key={tier.tier} className="space-y-3">
-          {tier.items.map((item, idx) => (
-            <div key={idx} className={`bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg p-4 border-l-4 ${tierColors[item.tier] || 'border-l-gray-300'}`}>
-              <div className="flex items-start justify-between mb-2">
+        <div className="mt-3 space-y-3">
+          {analysis.items.map((item, index) => (
+            <article key={item.id} className={`rounded-lg border border-[var(--color-border)] bg-white p-4 tier-${item.tier}`}>
+              <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
-                  <h3 className="text-sm font-semibold">
-                    {item.record.institutionName}
-                    {item.institution?.is985 && <span className="ml-1 px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded">985</span>}
-                    {item.institution?.is211 && <span className="ml-1 px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">211</span>}
-                    {item.institution?.isDoubleFirst && <span className="ml-1 px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded">双一流</span>}
-                  </h3>
-                  <p className="text-xs text-[var(--color-text-muted)]">
-                    {item.institution?.type || ''} · {item.institution?.city || ''} · 专业组{item.record.groupCode} {item.record.groupName}
+                  <h3 className="font-semibold">{item.institutionName || '未填写院校名称'} · 专业组 {item.groupCode || '未填写'}</h3>
+                  <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                    {item.institutionCode || '院校代码缺失'} · {item.schoolType} · {item.city || '城市未填'} · {item.majors || '拟报专业未填'}
                   </p>
                 </div>
-                <span className="text-xs font-bold text-[var(--color-primary)] whitespace-nowrap">{item.tier}</span>
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-[var(--color-primary)]">{item.tier}</span>
               </div>
-
-              {/* Score History */}
-              {item.rankHistory.length > 0 && (
-                <div className="flex gap-3 mb-2 text-xs">
-                  {item.rankHistory.map(h => (
-                    <span key={h.year} className="text-[var(--color-text-muted)]">
-                      {h.year}年: <strong className="text-[var(--color-text)]">{h.rank?.toLocaleString() || '-'}名</strong>
-                      {h.score && <span className="ml-0.5">/{h.score}分</span>}
-                    </span>
-                  ))}
-                  {item.record.minimumRank && (
-                    <span className="text-[var(--color-text-muted)]">
-                      {data.dataYear}年: <strong className="text-[var(--color-text)]">{item.record.minimumRank.toLocaleString()}名</strong>
-                      {item.record.minimumScore && <span className="ml-0.5">/{item.record.minimumScore}分</span>}
-                    </span>
-                  )}
+              <p className="mt-3 text-sm leading-relaxed">{item.reason}</p>
+              <div className="mt-3 flex flex-wrap gap-3 text-xs text-[var(--color-text-muted)]">
+                <span>2023：{item.rank2023?.toLocaleString() || '-'}</span>
+                <span>2024：{item.rank2024?.toLocaleString() || '-'}</span>
+                <span>2025：{item.rank2025?.toLocaleString() || '-'}</span>
+                <span>波动：{item.rankStats.fluctuation == null ? '-' : `${item.rankStats.fluctuation}%`}</span>
+                <span>2026计划：{item.plan2026 || '-'}</span>
+                <span>学费：{item.tuition || '-'} 元/年</span>
+              </div>
+              {[...item.errors, ...item.warnings].length > 0 && (
+                <div className="mt-3 rounded border border-orange-200 bg-orange-50 p-3">
+                  {[...item.errors, ...item.warnings].map((warning) => <p key={warning} className="text-xs leading-relaxed text-orange-800">• {warning}</p>)}
                 </div>
               )}
+              {item.sourceUrl && <a className="mt-2 block break-all text-xs text-[var(--color-primary)]" href={item.sourceUrl} target="_blank" rel="noreferrer">来源：{item.sourceUrl}</a>}
+            </article>
+          ))}
+        </div>
+      </section>
 
-              {/* Plan count */}
-              {item.record.planCount && (
-                <p className="text-xs text-[var(--color-text-muted)] mb-1">招生计划：{item.record.planCount}人</p>
-              )}
+      <section className="mb-4 grid gap-4 lg:grid-cols-2">
+        <RiskPanel title="学费和家庭成本风险" items={highCostItems} empty="暂无明显超预算项。" />
+        <RiskPanel title="调剂风险" items={adjustmentItems} empty="暂无明显调剂冲突。" />
+        <RiskPanel title="专业方向风险" items={majorRiskItems} empty="暂无明显专业方向冲突。" />
+        <RiskPanel title="数据缺失项" items={missingDataItems} empty="关键历史排位和代码较完整。" />
+      </section>
 
-              {/* Subject requirements */}
-              {item.record.subjectRequirements && (
-                <p className="text-xs text-[var(--color-text-muted)] mb-1">
-                  选科要求：{(() => { try { return JSON.parse(item.record.subjectRequirements).join('、') } catch { return item.record.subjectRequirements } })()}
-                </p>
-              )}
-
-              {/* Reason */}
-              <p className="text-xs text-[var(--color-text-muted)] mb-2 leading-relaxed">{item.reason}</p>
-
-              {/* Risk notes */}
-              {item.riskNotes.length > 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mb-2">
-                  {item.riskNotes.map((note, i) => (
-                    <p key={i} className="text-xs text-[var(--color-text-muted)] leading-relaxed">⚠ {note}</p>
-                  ))}
-                </div>
-              )}
-
-              {/* Source */}
-              <div className="text-[10px] text-[var(--color-text-muted)] border-t pt-2 mt-2">
-                <span className="mr-3">验证状态：{item.record.verificationStatus === 'verified' ? '✅ 已双重验证' : item.record.verificationStatus === 'single-source' ? '📋 单一官方来源' : item.record.verificationStatus}</span>
-                <span>数据来源：{item.record.sourceLevel}级 · {item.record.sourceName}</span>
-                {item.record.officialPublishedAt && <span className="ml-2">发布于：{item.record.officialPublishedAt}</span>}
-              </div>
-
-              {/* Data type warning */}
-              {item.record.dataType === 'group' && (
-                <p className="text-[10px] text-orange-600 mt-1">此为院校专业组投档最低排位，非具体专业录取数据。组内专业可能存在差异，最终以官方招生专业目录为准。</p>
-              )}
+      <section className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">建议研究顺序</h2>
+          <p className="text-xs text-[var(--color-text-muted)]">可拖动调整，仅作为研究草稿，不是最终填报方案。</p>
+        </div>
+        <div className="mt-3 space-y-2">
+          {order.map((item, index) => (
+            <div
+              key={item.id}
+              draggable
+              onDragStart={() => setDragIndex(index)}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={() => {
+                if (dragIndex !== null) moveOrder(dragIndex, index)
+                setDragIndex(null)
+              }}
+              className="flex items-center justify-between gap-3 rounded border border-[var(--color-border)] bg-white p-3 text-sm"
+            >
+              <span>{index + 1}. [{item.tier}] {item.institutionName || '未填写院校'} 专业组{item.groupCode || '-'}</span>
+              <span className="flex gap-2 text-xs">
+                <button onClick={() => moveOrder(index, index - 1)} className="rounded border px-2 py-1">上移</button>
+                <button onClick={() => moveOrder(index, index + 1)} className="rounded border px-2 py-1">下移</button>
+              </span>
             </div>
           ))}
         </div>
-      ))}
+      </section>
 
-      {/* Empty state */}
-      {data.totalResults === 0 && (
-        <div className="text-center py-12 text-[var(--color-text-muted)]">
-          <p className="text-lg mb-2">未找到匹配的院校专业组</p>
-          <p className="text-sm">该年度官方数据可能尚未发布或尚未收录。请尝试选择其他年份，或调整筛选条件。</p>
-          <Link href="/questionnaire" className="inline-block mt-4 text-[var(--color-primary)] text-sm">重新填写 →</Link>
+      <section className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <h2 className="text-base font-semibold">官方核对清单</h2>
+        <div className="mt-3 grid gap-2 md:grid-cols-2">
+          {analysis.checklist.map((item, index) => (
+            <label key={item} className="flex items-start gap-2 rounded border border-[var(--color-border)] bg-white p-2 text-sm">
+              <input type="checkbox" checked={Boolean(checklist[index])} onChange={(event) => setChecklist((current) => ({ ...current, [index]: event.target.checked }))} className="mt-1" />
+              <span>{item}</span>
+            </label>
+          ))}
         </div>
+      </section>
+
+      <section className="mb-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">AI通俗解释</h2>
+          <button onClick={requestAi} disabled={aiLoading} className="rounded bg-[var(--color-primary)] px-4 py-2 text-sm text-white disabled:opacity-50">{aiLoading ? '生成中...' : '生成解释与核对提示'}</button>
+        </div>
+        <p className="mt-2 text-xs text-[var(--color-text-muted)]">AI只解释本地规则结果和专业方向，不创建代码、计划、分数或排位。AI失败时，本页本地规则结果仍完整可用。</p>
+        {aiText && (
+          <div className="mt-3 whitespace-pre-wrap rounded border border-blue-100 bg-blue-50 p-3 text-sm leading-relaxed">
+            {aiUnavailable && <p className="mb-2 text-xs text-orange-700">AI服务不可用，以下为降级提示。</p>}
+            {aiText}
+          </div>
+        )}
+      </section>
+
+      <section className="mb-8 rounded-lg border border-[var(--color-warning)]/30 bg-[var(--color-warning)]/10 p-4 text-xs leading-relaxed text-[var(--color-text-muted)]">
+        {PUBLIC_DISCLAIMER}
+      </section>
+    </main>
+  )
+}
+
+function toAnalysisProfile(profile) {
+  return {
+    category: profile.category,
+    subjects: profile.selectedSubjects || [],
+    selectedSubjects: profile.selectedSubjects || [],
+    score: Number(profile.score) || 0,
+    rank: Number(profile.rank) || 0,
+    maxTuition: Number(profile.maxTuition) || 0,
+    preferredCities: splitWords(profile.preferredCitiesText),
+    acceptPrivate: Boolean(profile.acceptPrivate),
+    acceptSinoForeign: Boolean(profile.acceptSinoForeign),
+    acceptAdjustment: Boolean(profile.acceptAdjustment),
+    interests: splitWords(profile.majorInterestsText),
+    rejectedMajors: splitWords(profile.excludedMajorsText),
+    priority: profile.priority,
+  }
+}
+
+function splitWords(text) {
+  return String(text || '').split(/[、,，;；\s]+/).map((item) => item.trim()).filter(Boolean)
+}
+
+function Summary({ label, value }) {
+  return <div className="rounded border border-[var(--color-border)] bg-white p-3"><p className="text-xs text-[var(--color-text-muted)]">{label}</p><p className="mt-1 font-semibold">{value}</p></div>
+}
+
+function RiskPanel({ title, items, empty }) {
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+      <h2 className="text-sm font-semibold">{title}</h2>
+      {items.length === 0 ? <p className="mt-2 text-sm text-[var(--color-text-muted)]">{empty}</p> : (
+        <ul className="mt-2 space-y-1 text-sm text-[var(--color-text-muted)]">
+          {items.map((item) => <li key={`${item.id}-${title}`}>• {item.institutionName || '未填写院校'} 专业组{item.groupCode || '-'}</li>)}
+        </ul>
       )}
-
-      {/* Bottom actions */}
-      <div className="flex gap-3 mt-6 pb-8">
-        <Link href="/questionnaire" className="flex-1 text-center border border-[var(--color-border)] bg-white py-2.5 rounded text-sm no-underline">重新填写</Link>
-        <Link href="/sources" className="flex-1 text-center border border-[var(--color-border)] bg-white py-2.5 rounded text-sm no-underline">查看数据来源</Link>
-      </div>
-
-      {/* Disclaimer */}
-      <div className="bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 rounded p-3 text-xs text-[var(--color-text-muted)]">
-        <strong>重要提示：</strong>以上推荐仅基于广东省官方公开招生数据和您提供的信息进行初步分析。招生计划、专业组划分、选科要求和录取规则可能发生变化。本系统不保证录取，不替代广东省官方志愿填报系统。请务必以目标招生年度广东省教育考试院和高校招生章程为准。
-      </div>
     </div>
   )
+}
+
+function compressProfile(profile) {
+  return {
+    category: profile.category,
+    subjects: profile.subjects,
+    score: profile.score,
+    rank: profile.rank,
+    maxTuition: profile.maxTuition,
+    preferredCities: profile.preferredCities,
+    acceptPrivate: profile.acceptPrivate,
+    acceptSinoForeign: profile.acceptSinoForeign,
+    acceptAdjustment: profile.acceptAdjustment,
+    interests: profile.interests,
+    rejectedMajors: profile.rejectedMajors,
+    priority: profile.priority,
+  }
+}
+
+function compressItem(item) {
+  return {
+    tier: item.tier,
+    institutionName: item.institutionName,
+    institutionCode: item.institutionCode,
+    groupCode: item.groupCode,
+    majors: item.majors,
+    city: item.city,
+    schoolType: item.schoolType,
+    tuition: item.tuition,
+    ranks: { 2023: item.rank2023, 2024: item.rank2024, 2025: item.rank2025 },
+    plan2026: item.plan2026,
+    reason: item.reason,
+    warnings: item.warnings,
+    errors: item.errors,
+  }
+}
+
+function downloadFile(filename, content, type) {
+  const blob = new Blob([content], { type })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
 }

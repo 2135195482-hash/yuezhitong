@@ -4,7 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "node scripts/lint-mvp.cjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/plan-review.test.cjs",
+    "build": "next build",
+    "dev": "next dev"
   },
   "keywords": [],
   "author": "",
@@ -23,5 +27,8 @@
     "tailwindcss": "^4.3.1",
     "typescript": "^6.0.3",
     "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "playwright": "^1.61.1"
   }
 }

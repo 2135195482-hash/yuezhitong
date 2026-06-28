@@ -57,3 +57,12 @@ Generated: 2026-06-28 15:15 Asia/Shanghai
 - The original frozen history cannot be verified from local materials because the bundle, zip snapshot, and checksum file are absent.
 - The recovered repository is auditable from this point forward, but it is not equivalent to the missing frozen Git history.
 - The next phase must download and validate official attachments from `eea.gd.gov.cn` only before importing any formal records.
+
+## Emergency Product Pivot - 2026 Public Beta MVP
+
+- Updated objective on 2026-06-28: stop full official database acquisition for this round and ship a Guangdong volunteer plan review MVP.
+- New delivery branch: `feature/volunteer-plan-review-mvp`.
+- Required takeover baseline commit on new branch: `e58d530` (`chore: establish Codex takeover baseline`).
+- Product positioning: users first obtain candidate院校专业组 from official Guangdong channels, then use this app as a second-layer review assistant.
+- Data authenticity status remains unchanged: `prisma/official.db` has 0 official records; `prisma/demo.db` has 231 demo records; demo data must not be used for real-user recommendations.
+- MVP runtime strategy: user-entered candidates are stored in browser local storage/current session and analyzed by local rules. The empty official database must not block the workflow.
