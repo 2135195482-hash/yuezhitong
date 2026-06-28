@@ -13,6 +13,8 @@ __pycache__/
 *.pyc
 .git.broken-backup-*/
 logs/
+artifacts/screenshots/
+artifacts/github-pages-final/
 data/raw/
 data/normalized/
 data/verified/

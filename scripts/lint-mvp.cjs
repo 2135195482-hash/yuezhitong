@@ -23,7 +23,7 @@ for (const file of walk(path.join(root, 'src'))) {
   const rel = path.relative(root, file).replace(/\\/g, '/')
   const text = fs.readFileSync(file, 'utf8')
   const keyMatches = text.match(/sk-[A-Za-z0-9_-]{12,}/g) || []
-  if (keyMatches.some((key) => key !== 'sk-your-deepseek-api-key')) failures.push(`${rel}: possible API key literal`)
+  if (keyMatches.length) failures.push(`${rel}: possible API key literal`)
   if (/身份证号|考生号|手机验证码|志愿系统密码/.test(text) && !/不收集|不保存|不需要/.test(text)) {
     failures.push(`${rel}: sensitive credential field appears outside a disclaimer context`)
   }
